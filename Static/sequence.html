@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Real Time Visualization of Message Flows</title>
+  <!-- Import Bootstrap CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <style>h1 {color: seagreen;}</style>
+  <style>h4 {color: darkseagreen;}</style>
+  <style>p {color: whitesmoke;}</style>
+  <style>body {background-color: black;}</style>
+  <style>.mermaid {margin-bottom: 200px;}</style>
+
+  <!-- Import Mermaid JS -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <!-- Set the configuration for Mermaid JS -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: 'dark',
+        sequence: {
+          diagramMarginX: 50,
+          diagramMarginY: 10,
+          actorMargin: 50,
+          width: 150,
+          height: 150,
+          boxMargin: 10,
+          boxTextMargin: 5,
+          noteMargin: 10,
+          messageMargin: 35,
+          messageAlign: 'center',
+          mirrorActors: true,
+          bottomMarginAdj: 1,
+          useMaxWidth: true
+        }
+      });
+
+      let intervalId = null;
+      const startButton = document.querySelector('#start-button');
+      const stopButton = document.querySelector('#stop-button');
+      const durationInput = document.querySelector('#duration-input');
+      const exportButton = document.querySelector('#export-button');
+      const sequenceButton = document.querySelector('#sequence-button');
+      const flowchartButton = document.querySelector('#flowchart-button');
+
+      sequenceButton.addEventListener('click', () => {
+        sequenceButton.classList.add('active');
+        flowchartButton.classList.remove('active');
+      });
+
+      flowchartButton.addEventListener('click', () => {
+        sequenceButton.classList.remove('active');
+        flowchartButton.classList.add('active');
+      });
+
+      startButton.addEventListener('click', () => {
+        const duration = durationInput.value;
+        const diagramType = getSelectedDiagramType();
+        fetchData(duration, diagramType);
+        intervalId = setInterval(() => {
+          fetchData(duration, diagramType);
+        }, 30000);
+      });
+
+      function fetchData(duration, diagramType) {
+        const api = diagramType === 'sequence' ? `http://127.0.0.1:5001/sequence-diagram/query?measurement=function_calls&duration=${duration}` : `http://127.0.0.1:5001/dataflow-diagram/query?measurement=function_calls&duration=${duration}`;
+        fetch(api)
+          .then(response => response.json())
+          .then(data => {
+            const mermaidDiv = document.querySelector('.mermaid');
+            mermaid.render('mermaid-diagram', data.data, function (svgCode) {
+              mermaidDiv.innerHTML = svgCode;
+            });
+          })
+          .catch(error => console.error(error));
+      }
+
+      function getSelectedDiagramType() {
+        return sequenceButton.classList.contains('active') ? 'sequence' : 'flowchart';
+      }
+
+      stopButton.addEventListener('click', () => {
+        clearInterval(intervalId);
+      });
+
+      exportButton.addEventListener('click', () => {
+        const diagramType = getSelectedDiagramType();
+        const svgCode = document.querySelector('#mermaid-diagram').outerHTML;
+        const svgBlob = new Blob([svgCode], {type: "image/svg+xml;charset=utf-8"});
+        const time = Date.now()
+        const name = diagramType === 'sequence' ? `sequence-diagram-${time}.svg` : `dataflow-diagram-${time}.svg`
+        saveAs(svgBlob, name);
+      });
+    });
+  </script>
+</head>
+<body>
+<div class="container mt-3">
+  <div class="row">
+    <div class="col-2">
+      <img src="/static/logo-png.png" alt="Logo" width="150px" height="140px">
+    </div>
+    <div class="col-10">
+      <h1 class="mb-4">Real-time Visualization of Message Flows</h1>
+      <p>Real-time visualization of message flows is a tool that involves capturing and displaying the messages exchanged between different components of a system or application in real-time.
+        The messages can be of different types, such as function calls, API requests, database queries, etc.
+        The visualization can be in the form of sequence diagrams and dataflow diagram that show the messages flowing between different components and the time taken for each message to travel.</p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-3">
+      <div class="container mt-5">
+        <div class="row">
+          <h4 style="margin-top: 50px;">Select a Diagram</h4>
+          <div class="btn-group" role="group" aria-label="Basic example">
+            <button id="sequence-button" class="btn btn-success">Sequence Diagram</button>
+            <button id="flowchart-button" class="btn btn-info" style="margin-left: 5px;">Dataflow Diagram</button>
+          </div>
+        </div>
+      </div>
+      <h4 style="margin-top: 40px;">                  </h4>
+      <h4 style="margin-top: 50px;">Set Duration(seconds)</h4>
+      <input type="number" class="form-control" id="duration-input" min="1" value="5">
+      <button id="start-button" class="btn btn-primary" style="margin-top: 20px; margin-right: 5px;">Start</button>
+      <button id="stop-button" class="btn btn-danger" style="margin-top: 20px; margin-right: 5px;">Stop</button>
+      <button id="export-button" class="btn btn-warning" style="margin-top: 20px;">Export</button>
+    </div>
+    <div class="container mt-5">
+      <h4>Diagram</h4>
+    <div class="col-9">
+        <div class="mermaid" style="margin-top: 20px; max-height: 500px;" >
+          <div id="mermaid-diagram" class="zoom"></div>
+      </div>
+    </div>
+      </div>
+  </div>
+</div>
+</body>
+</html>
