@@ -7,8 +7,8 @@ app = Flask(__name__, static_folder='../static', template_folder='../static')
 CORS(app)
 
 # Set up the InfluxDB client with your credentials
-token = "3vUXCbGamv3TwUc5rek3z21ZSQhQcT5UgR5t2d4cnwOwM4tf0uSHUXIZt1xAkAKOejbjcWB0L1pheYfIcAXlPA=="
-org = "university of ottawa"
+token = "<your token>"
+org = "<your org name>"
 
 # Set up the InfluxDB client with your credentials
 client = InfluxDBClient(url="http://localhost:8086", token=token, org=org)
@@ -33,7 +33,7 @@ def query_bucket():
     start_time = (datetime.utcnow() - timedelta(seconds=int(duration))).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     # Construct a Flux query to retrieve the data
-    query = f'from(bucket: "codeflow") \
+    query = f'from(bucket: "<bucket_name>") \
               |> range(start: {start_time}, stop: {end_time}) \
               |> filter(fn: (r) => r["_measurement"] == "function_calls") \
               |> filter(fn: (r) => r["_field"] == "callee_func" or r["_field"] == "caller_func" or \
@@ -85,7 +85,7 @@ def create_dataflow_diagram():
     start_time = (datetime.utcnow() - timedelta(seconds=int(duration))).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     # Construct a Flux query to retrieve the data
-    query = f'from(bucket: "codeflow") \
+    query = f'from(bucket: "<bucket_name>") \
               |> range(start: {start_time}, stop: {end_time}) \
               |> filter(fn: (r) => r["_measurement"] == "function_calls") \
               |> filter(fn: (r) => r["_field"] == "callee_func" or r["_field"] == "caller_func")'
