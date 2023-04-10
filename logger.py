@@ -8,9 +8,9 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-token = "3vUXCbGamv3TwUc5rek3z21ZSQhQcT5UgR5t2d4cnwOwM4tf0uSHUXIZt1xAkAKOejbjcWB0L1pheYfIcAXlPA=="
-org = "university of ottawa"
-bucket = "codeflow"
+token = "<your token>"
+org = "<your org name>"
+bucket = "<bucket name>"
 
 with InfluxDBClient(url="http://localhost:8086", token=token, org=org) as client:
     write_api = client.write_api(write_options=SYNCHRONOUS)
@@ -37,7 +37,7 @@ def log_calls(func):
                 "tags": {
                     "caller_func": caller_func,
                     "callee_func": callee_func,
-                    "output": str(output),
+                    "output": str(output), // configurable data
                 },
                 "time": timestamp,
                 "fields": {
